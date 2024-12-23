@@ -1,7 +1,10 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: 'http://localhost:4000'
+    baseURL: 'http://localhost:4000',
+    headers: {
+        'Content-Type': 'application/json',
+    }
 })
 
 api.interceptors.request.use((config)=>{
@@ -37,10 +40,10 @@ export const importArtists = (csvFile) => {
     });
 };
 export const exportArtists = () => api.get("/artists/export", { responseType: "blob" });
+export const getMusicsByArtist = (artistId) => api.get(`/artists/${artistId}`);
 
 // Song APIs
 export const getMusics = (page,limit) =>api.get(`/musics`,{params:{page,limit}});
-export const getMusicsByArtist = (artistName) => api.get(`/musics?artistName=${artistName}`);
 export const createMusic = (artistId, musicData) => api.post(`/musics?artistId=${artistId}`, musicData);
 export const updateMusic = (songId, updatedMusicData) => api.put(`/musics/${songId}`, updatedMusicData);
 export const deleteMusic = (songId) => api.delete(`/musics/${songId}`);

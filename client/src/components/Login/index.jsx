@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {useNavigate} from 'react-router-dom';
 
 import { useAuth } from '../../auth/authContext';
@@ -29,10 +29,6 @@ export default function LogIn() {
     e.preventDefault();
     const {email,password} = userDetails;
     await handleLogin(email,password);
-    if(user){
-      navigate('/');
-      handleSuccess(user.data.message);
-    }
     setUserDetails({email:'',password:''})
   }
 
@@ -47,6 +43,12 @@ export default function LogIn() {
     setIsUser(true);
   }
 
+  useEffect(()=>{
+    if(user){
+      navigate('/');
+      handleSuccess(user.data.message);
+    }
+  },[user,navigate]);
 
   return (
     <div className='border border-black h-[100vh] flex flex-col items-center md:flex-row justify-between w-full'>

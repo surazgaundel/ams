@@ -3,6 +3,9 @@ const router = express.Router();
 const Artist = require('../models/artist');
 const Music = require('../models/music');
 const csv = require('fast-csv');
+const fs = require('fs');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 //get artist
 router.get('/', async (req, res) => {
@@ -56,30 +59,57 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Import CSV
-router.post('/import', async (req, res) => {
-    try {
-    const csvData = []; // Parse CSV data
-    // Assume req.file contains the uploaded CSV file
-    csv.parseString(req.file.buffer.toString(), { headers: true })
-        .on('data', (row) => csvData.push(row))
-        .on('end', async () => {
-        await Artist.insertMany(csvData);
-        res.json({ message: 'Artists imported successfully.' });
-        });
-    } catch (err) {
-    res.status(500).json({ error: err.message });
+router.post('/import',upload.single('file'), async (req, res) => {
+  const filePath = req.file?.path;
+    if (!filePath) {
+        return res.status(400).json({ message: 'No file uploaded.' });
     }
+    const csvData = [];
+    let isEmpty = true;
+    fs.createReadStream(filePath)
+      .pipe(csv.parse({ headers: true }))
+      .on('data', (data) => {
+        isEmpty =false;
+        const {name,dob,gender,address,firstReleaseYear,noOfAlbumReleased,createdAt,updatedAt} = data;
+        csvData.push({
+          name,
+          dob,
+          gender,
+          address,
+          firstReleaseYear,
+          noOfAlbumReleased,
+          createdAt,
+          updatedAt,
+        })
+      })
+      .on('end', async () => {
+        fs.unlinkSync(filePath);
+        if(isEmpty){
+          return res.status(400).json({ message: 'CSV file is empty.' });
+        }
+        try{
+          await Artist.insertMany(csvData);
+          res.status(201).json({ message: 'Artists imported successfully.' });
+        } catch (err) {
+          res.status(500).json({ message: err.message });
+        }
+      })
+      .on('error', (error) => {
+        fs.unlinkSync(filePath);
+        console.error('Error reading CSV file:', error);
+        res.status(500).json({ error: 'Failed to process CSV file' });
+      });
 });
 
 // Export CSV
 router.get('/export', async (req, res) => {
   try {
-    const artists = await Artist.find().lean().exec();
+    const artists = await Artist.find().lean().exec(); //bypass mongoose document to plain object speed up the process
     const csvStream = csv.format({ headers: true });
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="artists.csv"');
     csvStream.pipe(res);
-    artists.forEach((artist) => csvStream.write(artist.toObject()));
+    artists.forEach((artist) => csvStream.write(artist));
     csvStream.end();
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -87,10 +117,16 @@ router.get('/export', async (req, res) => {
 });
 
 // Songs for an artist
-router.get('/musics/:artistName', async (req, res) => {
+router.get('/:artistId', async (req, res) => {
+  console.log('??',req.params.artistId);
   try {
-    const songs = await Music.find({ artistName: req.params.artistName });
-    res.json(songs);
+    const songs = await Music.find({ artistId: req.params.artistId });
+    console.log('??',songs);
+    if(songs.length > 0){
+      res.json({songs,message:'Songs fetched successfully'});
+    }else{
+      res.status(404).json({message:'No songs found for this artist'});
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -17,7 +17,7 @@ router.post("/login", async (req, res) => {
         const isPasswordMatch = await bcrypt.compare(password, customer.password);
         if (!isPasswordMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-        const token = jwt.sign({ id: customer._id }, SECRET_KEY, { expiresIn: "1h" });
+        const token = jwt.sign({ id: customer._id }, SECRET_KEY, { expiresIn: "5h" });
         res.json({ token, auth:true, message:'You are successfully signed in' });
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -78,7 +78,7 @@ export default function User() {
               {Object.keys(users?.[0] || {}).filter(key => !hiddenFields.includes(key)).map((key) => (
                 <th key={key} className="px-6">{camelCaseToSpace(key).toUpperCase()}</th>
               ))}
-              <th>ACTIONS</th>
+              {users.length>0 && <th>ACTIONS</th> }
             </tr>
           </thead>
           <tbody>
@@ -106,13 +106,16 @@ export default function User() {
           </tbody>
         </table>
       </div>
-      <Pagination
-        totalPosts={totalPages}
-        paginate={paginate}
-        currentPage={currentPage}
-        nextPage={nextPage}
-        prevPage={prevPage}
-      />
+      {
+          users.length>0 && 
+            <Pagination
+            totalPosts={totalPages}
+            paginate={paginate}
+            currentPage={currentPage}
+            nextPage={nextPage}
+            prevPage={prevPage}
+          />
+        }
 
       {isModalOpen && (
         <AddUserForm 

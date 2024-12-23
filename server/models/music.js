@@ -7,6 +7,11 @@ const MusicSchema = new Schema({
         required:true,
         min:5
     },
+    artistId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Artist', 
+        required: true 
+    },
     albumName:{
         type:String,
         required:true

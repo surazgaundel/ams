@@ -22,26 +22,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get all songs for a specific artist
-router.get("/artist/:artistId", async (req, res) => {
-  const { artistId } = req.params;
-  const { page = 1, limit = 10 } = req.query;
-  try {
-    const songs = await Music.find({ artistId })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
-    const totalSongs = await Music.countDocuments({ artistId });
-    res.json({
-      songs,
-      totalSongs,
-      page,
-      totalPages: Math.ceil(total / limit),
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Add a new song
 router.post("/artist/:artistId", async (req, res) => {
   const { artistId } = req.params;
